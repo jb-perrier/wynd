@@ -1,4 +1,4 @@
-FROM fedora:latest
+FROM ubuntu:latest
 
 WORKDIR /home/
 
@@ -8,4 +8,4 @@ RUN bash ./setup.sh
 
 ENV PATH="/root/.cargo/bin:$PATH"
 
-RUN bash ./setup_cargo.sh
+#RUN bash ./setup_cargo.sh

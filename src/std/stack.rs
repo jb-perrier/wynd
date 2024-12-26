@@ -1,9 +1,9 @@
-use crate::{Runtime, RuntimeError, Word};
+use crate::{Runtime, RuntimeError, WordBuilder, WordCode};
 
 pub fn insert_stack(words: &mut crate::Words) {
-    words.insert("drop", Word::Native(drop));
-    words.insert("dup", Word::Native(dup));
-    words.insert("stack", Word::Native(print_stack));
+    words.insert(WordBuilder::new("stack").code(WordCode::Native(print_stack)).description("Print the stack").build());
+    words.insert(WordBuilder::new("drop").code(WordCode::Native(drop)).description("Drop the top value from the stack").build());
+    words.insert(WordBuilder::new("dup").code(WordCode::Native(dup)).description("Duplicate the top value on the stack").build());
 }
 
 pub fn print_stack(run: &mut Runtime) -> anyhow::Result<()> {

@@ -18,6 +18,10 @@ pub struct Cli {
     /// Tokenize the source code and print it to stdout
     #[clap(long, short)]
     tokenize: bool,
+
+    /// Print the stack after each command
+    #[clap(long, short)]
+    print_stack: bool,
 }
 
 pub fn main() {
@@ -62,7 +66,7 @@ pub fn repl(cli: &Cli) {
                     break;
                 }
                 execute_string(cli, &source, &mut words, &mut stack);
-                std::io::stdout().flush().unwrap();
+                let _ = std::io::stdout().flush();
             }
             Ok(Signal::CtrlD) | Ok(Signal::CtrlC) => {
                 break;
@@ -86,7 +90,7 @@ pub fn execute_string(cli: &Cli, source: &str, words: &mut Words, stack: &mut Ve
         println!("Error: {:?}", err);
     } else if cli.untokenize {
         println!("{}", untokenize(&tokens));
-    } else {
+    } else if cli.print_stack {
         print_stack(stack);
     }
 }

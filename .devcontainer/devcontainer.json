@@ -6,11 +6,12 @@
                 "cschleiden.vscode-github-actions",
                 "ms-vsliveshare.vsliveshare",
                 "rust-lang.rust-analyzer",
-                "serayuzgur.crates",
                 "vadimcn.vscode-lldb",
                 "beardedbear.beardedtheme",
                 "BeardedBear.beardedicons",
-                "tamasfe.even-better-toml"
+                "tamasfe.even-better-toml",
+                "github.copilot",
+                "github.copilot-chat"
             ],
             "settings": {
                 "editor.formatOnSave": true,
@@ -35,4 +36,8 @@
         }
     },
     "dockerFile": "Dockerfile",
+    "features": {
+        "ghcr.io/eitsupi/devcontainer-features/nushell:0": {},
+        "ghcr.io/devcontainers/features/rust:1": {},
+    }
 }

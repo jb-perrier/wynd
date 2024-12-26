@@ -1,18 +1,56 @@
-use ::std::collections::HashMap;
-
-mod tokenizer;
-mod executor;
-mod std;
-mod error;
-
+use ::std::{
+    collections::{hash_map::Keys, BTreeMap, HashMap},
+    fmt::Display,
+    str::FromStr,
+};
 use slab::Slab;
 
-pub use tokenizer::*;
+mod error;
+mod executor;
+mod std;
+mod tokenizer;
+mod word;
+
+pub use error::*;
 pub use executor::*;
 pub use std::*;
-pub use error::*;
+pub use tokenizer::*;
+pub use word::*;
 
-pub type NativeWordFn = fn(&mut Runtime) -> Result<(), anyhow::Error>;
+pub type NativeWordFn = fn(&mut Runtime) -> anyhow::Result<()>;
+
+pub enum ValueType {
+    Number,
+    String,
+}
+
+impl FromStr for ValueType {
+    type Err = ();
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "number" => Ok(Self::Number),
+            "string" => Ok(Self::String),
+            _ => Err(()),
+        }
+    }
+}
+
+impl ValueType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Number => "number",
+            Self::String => "string",
+        }
+    }
+
+    pub fn id(&self) -> usize {
+        match self {
+            Self::Number => 1,
+            Self::String => 2,
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -20,11 +58,40 @@ pub enum Value {
     String(String),
 }
 
-pub enum InterpreterError {
-
+impl Display for Value {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match self {
+            Value::Number(num) => write!(f, "{}", num),
+            Value::String(string) => write!(f, "{}", string),
+        }
+    }
 }
 
-pub enum Word {
+impl Value {
+    pub fn value_type(&self) -> ValueType {
+        match self {
+            Value::Number(_) => ValueType::Number,
+            Value::String(_) => ValueType::String,
+        }
+    }
+
+    pub fn as_number(&self) -> Option<f64> {
+        match self {
+            Value::Number(num) => Some(*num),
+            _ => None,
+        }
+    }
+
+    pub fn as_string(&self) -> Option<&str> {
+        match self {
+            Value::String(string) => Some(string),
+            _ => None,
+        }
+    }
+}
+pub enum InterpreterError {}
+
+pub enum WordCode {
     Source(Vec<Token>),
     Native(NativeWordFn),
 }
@@ -48,12 +115,17 @@ impl Words {
         }
     }
 
-    pub fn insert(&mut self, name: &str, word: Word) -> usize {
+    pub fn names(&self) -> impl Iterator<Item = (&str, usize)> {
+        self.names.iter().map(|(k, v)| (k.as_str(), *v))
+    }
+
+    pub fn insert(&mut self, word: Word) -> usize {
+        let name = word.name.clone();
         let id = self.words.insert(word);
-        self.names.insert(name.to_string(), id);
+        self.names.insert(name, id);
         id
     }
-    
+
     pub fn get(&self, name: &str) -> Option<&Word> {
         self.names.get(name).and_then(|id| self.words.get(*id))
     }
@@ -85,7 +157,7 @@ pub fn print_stack(stack: &mut [Value]) {
                 print!("{} ", num);
             }
             Value::String(string) => {
-                print!("{} ", string);
+                print!("\"{}\" ", string);
             }
         }
     }

@@ -1,11 +1,51 @@
-use crate::{Runtime, RuntimeError, Value, Word};
+use crate::{Runtime, RuntimeError, Value, ValueType, WordBuilder, WordCode};
 
 pub fn insert_math(words: &mut crate::Words) {
-    words.insert("+", Word::Native(add));
-    words.insert("-", Word::Native(sub));
-    words.insert("*", Word::Native(mul));
-    words.insert("/", Word::Native(div));
-    words.insert("%", Word::Native(rem));
+    words.insert(
+        WordBuilder::new("+")
+            .code(WordCode::Native(add))
+            .input(ValueType::Number, "Left operand")
+            .input(ValueType::Number, "Right operand")
+            .output(ValueType::Number, "Result")
+            .description("Add two numbers")
+            .build(),
+    );
+    words.insert(
+        WordBuilder::new("-")
+            .code(WordCode::Native(sub))
+            .input(ValueType::Number, "Left operand")
+            .input(ValueType::Number, "Right operand")
+            .output(ValueType::Number, "Result")
+            .description("Substract two numbers")
+            .build(),
+    );
+    words.insert(
+        WordBuilder::new("*")
+            .code(WordCode::Native(mul))
+            .input(ValueType::Number, "Left operand")
+            .input(ValueType::Number, "Right operand")
+            .output(ValueType::Number, "Result")
+            .description("Multiply two numbers")
+            .build(),
+    );
+    words.insert(
+        WordBuilder::new("/")
+            .code(WordCode::Native(div))
+            .input(ValueType::Number, "Left operand")
+            .input(ValueType::Number, "Right operand")
+            .output(ValueType::Number, "Result")
+            .description("Divide two numbers")
+            .build(),
+    );
+    words.insert(
+        WordBuilder::new("%")
+            .code(WordCode::Native(rem))
+            .input(ValueType::Number, "Left operand")
+            .input(ValueType::Number, "Right operand")
+            .output(ValueType::Number, "Result")
+            .description("Remainder of two numbers")
+            .build(),
+    );
 }
 
 pub fn add(run: &mut Runtime) -> anyhow::Result<()> {

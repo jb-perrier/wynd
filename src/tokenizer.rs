@@ -5,6 +5,38 @@ pub enum Token {
     String(String),
 }
 
+impl Token {
+    pub fn as_string(&self) -> Option<&str> {
+        match self {
+            Token::Word(word) => Some(word),
+            Token::String(string) => Some(string),
+            _ => None,
+        }
+    }
+
+    pub fn as_number(&self) -> Option<f64> {
+        match self {
+            Token::Number(num) => Some(*num),
+            _ => None,
+        }
+    }
+
+    pub fn as_word(&self) -> Option<&str> {
+        match self {
+            Token::Word(word) => Some(word),
+            _ => None,
+        }
+    }
+    
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            Token::Word(_) => "word",
+            Token::Number(_) => "number",
+            Token::String(_) => "string",
+        }
+    }
+}
+
 pub fn tokenize(source: &str) -> Vec<Token> {
     let mut i = 0;
     let mut tokens = Vec::new();
