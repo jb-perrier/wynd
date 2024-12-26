@@ -1,27 +1,38 @@
 {
-	"name": "Codespaces Rust Starter",
-	"extensions": [
-		"cschleiden.vscode-github-actions",
-		"ms-vsliveshare.vsliveshare",
-		"rust-lang.rust-analyzer",
-		"serayuzgur.crates",
-		"vadimcn.vscode-lldb",
-		"beardedbear.beardedtheme",
-		"BeardedBear.beardedicons",
-		"tamasfe.even-better-toml"
-	],
-	"dockerFile": "Dockerfile",
-	"settings": {
-		"editor.formatOnSave": true,
-		"terminal.integrated.shell.linux": "/usr/bin/zsh",
-		"files.exclude": {
-			"**/CODE_OF_CONDUCT.md": true,
-			"**/LICENSE": true
-		},
-		"workbench.colorTheme": "Bearded Theme Arc",
-		"workbench.iconTheme": "bearded-icons",
-		"rust-analyzer.check.command": "clippy",
-		"files.autoSave": "afterDelay",
-		"files.autoSaveDelay": 250
-	}
+    "name": "Codespaces Rust Starter",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "cschleiden.vscode-github-actions",
+                "ms-vsliveshare.vsliveshare",
+                "rust-lang.rust-analyzer",
+                "serayuzgur.crates",
+                "vadimcn.vscode-lldb",
+                "beardedbear.beardedtheme",
+                "BeardedBear.beardedicons",
+                "tamasfe.even-better-toml"
+            ],
+            "settings": {
+                "editor.formatOnSave": true,
+                "terminal.integrated.shell.linux": "/usr/bin/zsh",
+                "files.exclude": {
+                    "**/CODE_OF_CONDUCT.md": true,
+                    "**/LICENSE": true
+                },
+                "workbench.colorTheme": "Bearded Theme Arc",
+                "workbench.iconTheme": "bearded-icons",
+                "rust-analyzer.check.command": "clippy",
+                "files.autoSave": "afterDelay",
+                "files.autoSaveDelay": 250,
+                "terminal.integrated.profiles.linux": {
+                    "nu": {
+                        "path": "nu",
+                        "args": []
+                    }
+                },
+                "terminal.integrated.defaultProfile.linux": "nu"
+            }
+        }
+    },
+    "dockerFile": "Dockerfile",
 }

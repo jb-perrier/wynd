@@ -1,17 +1,17 @@
 ## update and install some things we should probably have
-apt-get update
-apt-get install -y \
-  pkg-config \
-  curl \
-  git \
-  gnupg2 \
-  jq \
-  sudo \
-  zsh \
-  vim \
-  build-essential \
-  openssl \
-  libssl-dev
+dnf update -y
+dnf install -y \
+    pkgconfig \
+    curl \
+    git \
+    gnupg2 \
+    jq \
+    sudo \
+    nu \
+    vim \
+    @development-tools \
+    openssl \
+    openssl-devel
 
 ## Install rustup and common components
 curl https://sh.rustup.rs -sSf | sh -s -- -y 
