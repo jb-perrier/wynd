@@ -62,7 +62,7 @@ pub fn repl(cli: &Cli) {
         let sig = line_editor.read_line(&prompt);
         match sig {
             Ok(Signal::Success(source)) => {
-                if source == "exit" {
+                if source == "exit" || source == "quit" {
                     break;
                 }
                 execute_string(cli, &source, &mut words, &mut stack);

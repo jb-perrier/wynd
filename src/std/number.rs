@@ -1,7 +1,7 @@
 use crate::{Runtime, RuntimeError, Value, ValueType, WordBuilder, WordCode};
 
 pub fn insert_number(words: &mut crate::Words) {
-    words.insert(WordBuilder::new("to-number").code(WordCode::Native(to_number)).description("Convert the top value on the stack to a number").build());
+    words.insert(WordBuilder::new("to-number").code(WordCode::Native(to_number)).description("Convert value to a number").build());
     words.insert(WordBuilder::new("number").code(WordCode::Native(number_type)).description("Put the type id of Number on top the stack").build());
 }
 

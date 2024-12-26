@@ -1,10 +1,10 @@
-use crate::{Runtime, Value, WordBuilder, WordCode, Words};
+use crate::{Runtime, Value, ValueType, WordBuilder, WordCode, Words};
 
 pub fn insert_io(words: &mut Words) {
 
-    words.insert(WordBuilder::new("print").code(WordCode::Native(print)).build());
-    words.insert(WordBuilder::new("println").code(WordCode::Native(println)).build());
-    words.insert(WordBuilder::new("read").code(WordCode::Native(read)).build());
+    words.insert(WordBuilder::new("print").input(ValueType::String, "The string to print").description("Print a string").code(WordCode::Native(print)).build());
+    words.insert(WordBuilder::new("println").input(ValueType::String, "The string to print").description("Print a string with a newline").code(WordCode::Native(println)).build());
+    words.insert(WordBuilder::new("read").output(ValueType::String, "The input string").description("Read a line from stdin").code(WordCode::Native(read)).build());
 }
 
 pub fn print(run: &mut Runtime) -> anyhow::Result<()> {

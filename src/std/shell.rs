@@ -2,7 +2,7 @@ use crate::{Runtime, RuntimeError, Value, ValueType, WordBuilder, WordCode, Word
 
 pub fn insert_shell(words: &mut Words) {
     words.insert(WordBuilder::new("ls").code(WordCode::Native(ls)).input(ValueType::String, "Path").description("List directory contents").build());
-    words.insert(WordBuilder::new("pwd").code(WordCode::Native(pwd)).description("Print working directory").build());
+    words.insert(WordBuilder::new("pwd").code(WordCode::Native(pwd)).output(ValueType::String, "The current working directory").description("Print working directory").build());
 }
 
 pub fn ls(run: &mut Runtime) -> anyhow::Result<()> {

@@ -1,7 +1,7 @@
 use crate::{Runtime, RuntimeError, Value, ValueType, WordBuilder, WordCode, Words};
 
 pub fn insert_string(words: &mut Words) {
-    words.insert(WordBuilder::new("to-string").code(WordCode::Native(to_string)).description("Convert the top value on the stack to a string").build());
+    words.insert(WordBuilder::new("to-string").code(WordCode::Native(to_string)).description("Convert value to a string").build());
     words.insert(WordBuilder::new("string").code(WordCode::Native(string_type)).description("Put the type id of String on top the stack").build());
 }
 

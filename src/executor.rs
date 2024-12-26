@@ -7,7 +7,7 @@ pub struct Runtime<'a> {
 }
 
 pub fn execute(toks: &[Token], words: &mut Words, stack: &mut Vec<Value>) -> anyhow::Result<()> {
-    let main_word = WordBuilder::new("main")
+    let main_word = WordBuilder::new("_repl_main")
         .code(WordCode::Source(toks.to_vec()))
         .build();
     let main_id = words.insert(main_word);

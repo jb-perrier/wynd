@@ -7,7 +7,9 @@ mod word;
 mod string;
 mod number;
 mod shell;
+mod help;
 
+pub use help::*;
 pub use shell::*;
 pub use number::*;
 pub use string::*;
@@ -24,6 +26,7 @@ pub fn insert_std(words: &mut Words) {
     insert_string(words);
     insert_number(words);
     insert_shell(words);
+    insert_help(words);
 
     words.insert(WordBuilder::new("cast").code(WordCode::Native(cast)).description("Cast the top value on the stack to a different type").build());
 }
