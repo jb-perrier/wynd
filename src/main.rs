@@ -79,7 +79,7 @@ pub fn repl(cli: &Cli) {
 }
 
 pub fn execute_string(cli: &Cli, source: &str, words: &mut Words, stack: &mut Vec<Value>) {
-    let tokens = tokenize(source);
+    let tokens = tokenize(source).unwrap();
     if cli.tokenize {
         println!("{:?}", tokens);
         return;

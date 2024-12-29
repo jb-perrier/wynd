@@ -7,7 +7,7 @@ pub fn insert_stack(words: &mut crate::Words) {
 }
 
 pub fn print_stack(run: &mut Runtime) -> anyhow::Result<()> {
-    crate::print_stack(run.stack);
+    crate::print_values(run.stack);
     Ok(())
 }
 

@@ -8,7 +8,9 @@ mod string;
 mod number;
 mod shell;
 mod help;
+mod list;
 
+pub use list::*;
 pub use help::*;
 pub use shell::*;
 pub use number::*;

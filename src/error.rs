@@ -34,4 +34,6 @@ pub enum RuntimeError {
         to: &'static str,
     },
 
+    #[error("word not allowed in list")]
+    WordNotAllowedInList,
 }

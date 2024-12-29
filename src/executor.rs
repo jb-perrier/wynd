@@ -1,3 +1,5 @@
+use std::f32::consts::E;
+
 use crate::{RuntimeError, Token, Value, WordBuilder, WordCode, Words};
 
 pub struct Runtime<'a> {
@@ -7,7 +9,7 @@ pub struct Runtime<'a> {
 }
 
 pub fn execute(toks: &[Token], words: &mut Words, stack: &mut Vec<Value>) -> anyhow::Result<()> {
-    let main_word = WordBuilder::new("_repl_main")
+    let main_word = WordBuilder::new("_repl_main").description("Main REPL function, the one actually interpreted")
         .code(WordCode::Source(toks.to_vec()))
         .build();
     let main_id = words.insert(main_word);
@@ -40,6 +42,15 @@ pub fn execute(toks: &[Token], words: &mut Words, stack: &mut Vec<Value>) -> any
                         }
                         Token::String(string) => {
                             stack.push(Value::String(string.clone()));
+                        }
+                        Token::List(toks) => {
+                            let value_list: Result<Vec<Value>, RuntimeError> = toks.iter().map(|tok| match tok {
+                                Token::Word(_) => Err(RuntimeError::WordNotAllowedInList),
+                                Token::Number(num) => Ok(Value::Number(*num)),
+                                Token::String(string) => Ok(Value::String(string.clone())),
+                                Token::List(_) => Ok(Value::List(Vec::new())),
+                            }).collect();
+                            stack.push(Value::List(value_list?));
                         }
                     }
                 } else {

@@ -1,5 +1,5 @@
 use ::std::{
-    collections::{hash_map::Keys, BTreeMap, HashMap},
+    collections::HashMap,
     fmt::Display,
     str::FromStr,
 };
@@ -10,7 +10,9 @@ mod executor;
 mod std;
 mod tokenizer;
 mod word;
+mod image;
 
+pub use image::*;
 pub use error::*;
 pub use executor::*;
 pub use std::*;
@@ -19,9 +21,11 @@ pub use word::*;
 
 pub type NativeWordFn = fn(&mut Runtime) -> anyhow::Result<()>;
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum ValueType {
     Number,
     String,
+    List,
 }
 
 impl FromStr for ValueType {
@@ -41,6 +45,7 @@ impl ValueType {
         match self {
             Self::Number => "number",
             Self::String => "string",
+            Self::List => "list",
         }
     }
 
@@ -48,6 +53,7 @@ impl ValueType {
         match self {
             Self::Number => 1,
             Self::String => 2,
+            Self::List => 3,
         }
     }
 }
@@ -56,6 +62,7 @@ impl ValueType {
 pub enum Value {
     Number(f64),
     String(String),
+    List(Vec<Value>),
 }
 
 impl Display for Value {
@@ -63,6 +70,16 @@ impl Display for Value {
         match self {
             Value::Number(num) => write!(f, "{}", num),
             Value::String(string) => write!(f, "{}", string),
+            Value::List(list) => {
+                write!(f, "[")?;
+                for (i, value) in list.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, " ")?;
+                    }
+                    write!(f, "{}", value)?;
+                }
+                write!(f, "]")
+            }
         }
     }
 }
@@ -72,6 +89,7 @@ impl Value {
         match self {
             Value::Number(_) => ValueType::Number,
             Value::String(_) => ValueType::String,
+            Value::List(_) => ValueType::List,
         }
     }
 
@@ -85,6 +103,13 @@ impl Value {
     pub fn as_string(&self) -> Option<&str> {
         match self {
             Value::String(string) => Some(string),
+            _ => None,
+        }
+    }
+
+    pub fn as_list(&self) -> Option<&[Value]> {
+        match self {
+            Value::List(list) => Some(list),
             _ => None,
         }
     }
@@ -150,7 +175,7 @@ impl Words {
     }
 }
 
-pub fn print_stack(stack: &mut [Value]) {
+pub fn print_stack(stack: &[Value]) {
     for value in stack.iter() {
         match value {
             Value::Number(num) => {
@@ -159,7 +184,33 @@ pub fn print_stack(stack: &mut [Value]) {
             Value::String(string) => {
                 print!("\"{}\" ", string);
             }
+            Value::List(list) => {
+                print!("[ ");
+                print_values(list);
+                print!("] ");
+            }
         }
     }
     println!()
+}
+
+pub fn print_values(list: &[Value]) {
+    for (i, value) in list.iter().enumerate() {
+        if i > 0 && list[i - 1].value_type() != ValueType::List {
+            print!(" ");
+        }
+        match value {
+            Value::Number(num) => {
+                print!("{}", num);
+            }
+            Value::String(string) => {
+                print!("\"{}\"", string);
+            }
+            Value::List(list) => {
+                print!("[");
+                print_values(list);
+                print!("]");
+            }
+        }
+    }
 }
