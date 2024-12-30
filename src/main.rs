@@ -37,15 +37,16 @@ pub fn main() {
 }
 
 pub fn execute_arg(cli: &Cli, source: &str) {
-    let tokens = tokenize(source);
+    let mut stack = Vec::new();
+    let mut words = Words::new();
+
+    let tokens = tokenize(source, Some(&mut words));
 
     if cli.tokenize {
         println!("{:?}", tokens);
         return;
     }
-
-    let mut stack = Vec::new();
-    let mut words = Words::new();
+    
     insert_std(&mut words);
     execute_string(cli, source, &mut words, &mut stack);
 }
@@ -79,13 +80,13 @@ pub fn repl(cli: &Cli) {
 }
 
 pub fn execute_string(cli: &Cli, source: &str, words: &mut Words, stack: &mut Vec<Value>) {
-    let tokens = tokenize(source).unwrap();
+    let tokens = tokenize(source, Some(words)).unwrap();
     if cli.tokenize {
         println!("{:?}", tokens);
         return;
     }
 
-    let err = execute(&tokens, words, stack);
+    let err = execute_tokens(&tokens, words, stack);
     if let Err(err) = err {
         println!("Error: {:?}", err);
     } else if cli.untokenize {

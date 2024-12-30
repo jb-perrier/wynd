@@ -1,3 +1,5 @@
+#![feature(test)]
+
 use ::std::{
     collections::HashMap,
     fmt::Display,
@@ -11,7 +13,9 @@ mod std;
 mod tokenizer;
 mod word;
 mod image;
+mod bench;
 
+pub use bench::*;
 pub use image::*;
 pub use error::*;
 pub use executor::*;
@@ -140,6 +144,13 @@ impl Words {
         }
     }
 
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            words: Slab::with_capacity(capacity),
+            names: HashMap::with_capacity(capacity),
+        }
+    }
+    
     pub fn names(&self) -> impl Iterator<Item = (&str, usize)> {
         self.names.iter().map(|(k, v)| (k.as_str(), *v))
     }

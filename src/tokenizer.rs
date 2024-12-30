@@ -1,7 +1,8 @@
-use crate::Value;
+use crate::{Value, Words};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
+    WordIndex((String, usize)),
     Word(String),
     Number(f64),
     String(String),
@@ -33,6 +34,7 @@ impl Token {
     
     pub fn type_name(&self) -> &'static str {
         match self {
+            Token::WordIndex(_) => "word_index",
             Token::Word(_) => "word",
             Token::Number(_) => "number",
             Token::String(_) => "string",
@@ -41,7 +43,7 @@ impl Token {
     }
 }
 
-pub fn tokenize(source: &str) -> anyhow::Result<Vec<Token>> {
+pub fn tokenize(source: &str, words: Option<&mut Words>) -> anyhow::Result<Vec<Token>> {
     let mut i = 0;
     let mut tokens = Vec::new();
     let source: Vec<char> = source.chars().collect();
@@ -50,7 +52,7 @@ pub fn tokenize(source: &str) -> anyhow::Result<Vec<Token>> {
     while i < source.len() {
         let c = source[i];
         if c.is_whitespace() {
-            when_whitespace(&mut tokens, &mut current_token);
+            when_whitespace(&mut tokens, &mut current_token, &words);
         } else if c == '"' {
             i += 1;
             while i < source.len() && source[i] != '"' {
@@ -69,14 +71,18 @@ pub fn tokenize(source: &str) -> anyhow::Result<Vec<Token>> {
         i += 1;
     }
 
-    when_whitespace(&mut tokens, &mut current_token);
+    when_whitespace(&mut tokens, &mut current_token, &words);
     Ok(tokens)
 }
 
-fn when_whitespace(tokens: &mut Vec<Token>, current_token: &mut String) {
+fn when_whitespace(tokens: &mut Vec<Token>, current_token: &mut String, words: &Option<&mut Words>) {
     if !current_token.is_empty() {
         if let Ok(num) = current_token.parse::<f64>() {
             tokens.push(Token::Number(num));
+        } else if let Some(words) = words {
+            if let Some(id) = words.get_index(&current_token) {
+                tokens.push(Token::WordIndex((current_token.clone(), id)));
+            }
         } else {
             tokens.push(Token::Word(current_token.clone()));
         }
@@ -89,7 +95,7 @@ fn parse_list(source: &Vec<char>, i: &mut usize) -> anyhow::Result<Vec<Token>> {
     while *i < source.len() && source[*i] != ']' {
         let c = source[*i];
         if c.is_whitespace() {
-            when_whitespace(&mut list, &mut String::new());
+            when_whitespace(&mut list, &mut String::new(), &None);
         } else if c == '"' {
             list.push(Token::String(parse_string(source, i)));
         } else if c == '[' {
@@ -101,7 +107,7 @@ fn parse_list(source: &Vec<char>, i: &mut usize) -> anyhow::Result<Vec<Token>> {
                 current_token.push(source[*i]);
                 *i += 1;
             }
-            when_whitespace(&mut list, &mut current_token);
+            when_whitespace(&mut list, &mut current_token, &None);
         }
         *i += 1;
     }
@@ -122,6 +128,7 @@ pub fn untokenize(tokens: &[Token]) -> String {
     tokens
         .iter()
         .map(|token| match token {
+            Token::WordIndex((name, _)) => name.clone(),
             Token::Word(word) => word.clone(),
             Token::Number(num) => num.to_string(),
             Token::String(string) => format!("\"{}\"", string),
