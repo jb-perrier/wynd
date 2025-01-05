@@ -1,13 +1,11 @@
 use std::fmt::Display;
 
-use crate::{Value, ValueType, WordCode};
-
 #[derive(Debug)]
 pub enum WordForm {
     Postfix,
     Infix,
     Prefix,
-    Special
+    Special,
 }
 
 impl Display for WordForm {
@@ -87,7 +85,7 @@ impl WordBuilder {
             word: Word {
                 name: name.into(),
                 id: 0,
-                code: WordCode::Source(Vec::new()),
+                code: WordCode::Tokens(Vec::new()),
                 description: None,
                 abi: WordAbi::new(),
             },

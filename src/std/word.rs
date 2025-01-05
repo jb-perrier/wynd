@@ -44,7 +44,7 @@ pub fn define_word(run: &mut Runtime) -> anyhow::Result<()> {
 
 
         let toks = match &current_word.code {
-            WordCode::Source(body) => body,
+            WordCode::Tokens(body) => body,
             _ => return Err(crate::RuntimeError::UnknownWordId { id: *word_id }.into()),
         };
 
@@ -79,6 +79,6 @@ pub fn define_word(run: &mut Runtime) -> anyhow::Result<()> {
     let ret = run.ret_stack.get_mut(index).unwrap();
     ret.1 = pos;
 
-    run.words.insert(WordBuilder::new(&name).code(WordCode::Source(body)).build());
+    run.words.insert(WordBuilder::new(&name).code(WordCode::Tokens(body)).build());
     Ok(())
 }
