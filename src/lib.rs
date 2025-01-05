@@ -1,9 +1,7 @@
 #![feature(test)]
 
 use ::std::{
-    collections::HashMap,
-    fmt::Display,
-    str::FromStr,
+    any::Any, collections::HashMap, fmt::Display, str::FromStr
 };
 use slab::Slab;
 
@@ -14,6 +12,7 @@ mod tokenizer;
 mod word;
 mod image;
 mod bench;
+mod compiler;
 
 pub use bench::*;
 pub use image::*;
@@ -22,6 +21,7 @@ pub use executor::*;
 pub use std::*;
 pub use tokenizer::*;
 pub use word::*;
+pub use compiler::*;
 
 pub type NativeWordFn = fn(&mut Runtime) -> anyhow::Result<()>;
 
@@ -104,6 +104,33 @@ impl Value {
         }
     }
 
+    pub unsafe fn as_number_unchecked(&self) -> f64 {
+        match self {
+            Value::Number(num) => *num,
+            _ => {
+                let x: &void::Void = ::std::mem::transmute(1usize);
+                void::unreachable(*x)
+            }
+        }
+    }
+
+    pub fn as_usize(&self) -> Option<usize> {
+        match self {
+            Value::Number(num) => Some(num.to_bits() as usize),
+            _ => None,
+        }
+    }
+
+    pub unsafe fn as_usize_unchecked(&self) -> usize {
+        match self {
+            Value::Number(num) => num.to_bits() as usize,
+            _ => {
+                let x: &void::Void = ::std::mem::transmute(1usize);
+                void::unreachable(*x)
+            }
+        }
+    }
+
     pub fn as_string(&self) -> Option<&str> {
         match self {
             Value::String(string) => Some(string),
@@ -120,6 +147,7 @@ impl Value {
 }
 pub enum InterpreterError {}
 
+#[derive(Debug)]
 pub enum WordCode {
     Source(Vec<Token>),
     Native(NativeWordFn),

@@ -2,6 +2,8 @@ use comfy_table::Table;
 
 use crate::{Runtime, WordBuilder, WordCode, Words};
 
+use super::{print, println};
+
 pub fn insert_word(words: &mut Words) {
     words.insert(WordBuilder::new(":").code(WordCode::Native(define_word)).description("Define a new word").build());
     words.insert(WordBuilder::new("words").code(WordCode::Native(list_words)).description("List all words").build());
@@ -28,50 +30,55 @@ pub fn list_words(run: &mut Runtime) -> anyhow::Result<()> {
 }
 
 pub fn define_word(run: &mut Runtime) -> anyhow::Result<()> {
-    let (name, body) = {
+    let (name, body, pos) = {
         let mut body = Vec::new();
         let (word_id, mut pos) = run.ret_stack.get(run.ret_stack.len() - 2).unwrap();
 
-        // skip ':'
-        // let mut pos = pos + 1;
+        // return to the start of the word
+        // just after the ':'
 
         let current_word = run
             .words
             .get_by_index(*word_id)
             .ok_or(crate::RuntimeError::UnknownWordId { id: *word_id })?;
 
-        let current_word = match &current_word.code {
+
+        let toks = match &current_word.code {
             WordCode::Source(body) => body,
             _ => return Err(crate::RuntimeError::UnknownWordId { id: *word_id }.into()),
         };
 
-        let name = current_word
+        let tok = toks
             .get(pos)
             .ok_or(crate::RuntimeError::MissingFunctionName)?;
-        let name = name
-            .as_string()
+
+        let name = tok
+            .as_word_name()
             .ok_or(crate::RuntimeError::UnexpectedValue {
-                expected: "string".to_string(),
-                found: name.type_name().to_string(),
+                expected: "word".to_string(),
+                found: tok.type_name().to_string(),
+                value: Some(format!("{:?}", tok)),
             })?;
 
         pos += 1;
-        while let Some(token) = current_word.get(pos) {
+        while let Some(token) = toks.get(pos) {
             if let crate::Token::Word(word) = token {
                 if word == ";" {
-                    let pos = run.ret_stack.last_mut().unwrap();
-
                     // skip ';'
-                    pos.1 += 1;
+                    pos += 1;
                     break;
                 }
             }
             pos += 1;
             body.push(token.clone());
         }
-        (name.to_string(), body)
+        
+        (name.to_string(), body, pos)
     };
+    let index = run.ret_stack.len() - 2;
+    let ret = run.ret_stack.get_mut(index).unwrap();
+    ret.1 = pos;
+
     run.words.insert(WordBuilder::new(&name).code(WordCode::Source(body)).build());
-    run.ret_stack.pop();
     Ok(())
 }

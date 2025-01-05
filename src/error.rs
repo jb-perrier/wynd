@@ -19,10 +19,11 @@ pub enum RuntimeError {
         id: usize,
     },
 
-    #[error("value error: expected {expected}, found {found}")]
+    #[error("value error: expected {expected}, found {found}, value: {value:?}")]
     UnexpectedValue {
         expected: String,
         found: String,
+        value: Option<String>,
     },
 
     #[error("missing function name")]

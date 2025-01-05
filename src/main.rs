@@ -1,7 +1,7 @@
-use std::io::Write;
+use std::{io::Write, vec};
 
 use reedline::{DefaultPrompt, Reedline, Signal};
-use rust_test::*;
+use wynd::*;
 
 use clap::Parser;
 
@@ -25,15 +25,46 @@ pub struct Cli {
 }
 
 pub fn main() {
-    let cli = Cli::parse();
-    match cli.source.as_ref() {
-        Some(source) => {
-            execute_arg(&cli, source);
+    const SOURCE: &str =
+        "1 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 1 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * exit";
+    let mut words = Vec::new();
+        let mut ret_stack = Vec::with_capacity(64);
+        let mut stack = Vec::with_capacity(64);
+        stack.resize(128, 0);
+        let toks = tokenize(SOURCE, None).unwrap();
+
+        let bytecode = compile_to_bytecode(&toks).unwrap();
+        words.extend(bytecode);
+
+        ret_stack.push(0);
+
+        let mut stack_pos = 0;
+        let mut ret_stack_pos = 0;
+        for _ in 0..1000000 {
+            stack_pos = 0;
+            ret_stack_pos = 0;
+            let word_pos = ret_stack.get_mut(ret_stack_pos).unwrap();
+            *word_pos = 0;
+            bytecode_executor_computedgoto_words_safe_usizestack(
+                &mut stack,
+                &mut stack_pos,
+                &mut ret_stack,
+                &mut ret_stack_pos,
+                &mut words,
+            )
+            .unwrap();
+
+            assert_eq!(f64::from_bits(*stack.get(stack_pos - 1).unwrap() as u64), -5523.75);
         }
-        None => {
-            repl(&cli);
-        }
-    }
+    // let cli = Cli::parse();
+    // match cli.source.as_ref() {
+    //     Some(source) => {
+    //         execute_arg(&cli, source);
+    //     }
+    //     None => {
+    //         repl(&cli);
+    //     }
+    // }
 }
 
 pub fn execute_arg(cli: &Cli, source: &str) {

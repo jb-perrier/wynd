@@ -7,7 +7,7 @@ pub fn insert_shell(words: &mut Words) {
 
 pub fn ls(run: &mut Runtime) -> anyhow::Result<()> {
     let path = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    let path = path.as_string().ok_or(RuntimeError::UnexpectedValue { expected: "string".to_string(), found: path.value_type().as_str().to_string() })?;
+    let path = path.as_string().ok_or(RuntimeError::UnexpectedValue { expected: "string".to_string(), found: path.value_type().as_str().to_string(), value: None })?;
     let path = std::path::Path::new(path);
     let entries = std::fs::read_dir(path)?;
     for entry in entries {

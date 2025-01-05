@@ -32,6 +32,14 @@ impl Token {
         }
     }
     
+    pub fn as_word_name(&self) -> Option<&str> {
+        match self {
+            Token::WordIndex((name, _)) => Some(name),
+            Token::Word(word) => Some(word),
+            _ => None,
+        }
+    }
+
     pub fn type_name(&self) -> &'static str {
         match self {
             Token::WordIndex(_) => "word_index",
@@ -80,8 +88,10 @@ fn when_whitespace(tokens: &mut Vec<Token>, current_token: &mut String, words: &
         if let Ok(num) = current_token.parse::<f64>() {
             tokens.push(Token::Number(num));
         } else if let Some(words) = words {
-            if let Some(id) = words.get_index(&current_token) {
+            if let Some(id) = words.get_index(current_token) {
                 tokens.push(Token::WordIndex((current_token.clone(), id)));
+            } else {
+                tokens.push(Token::Word(current_token.clone()));
             }
         } else {
             tokens.push(Token::Word(current_token.clone()));

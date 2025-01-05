@@ -35,7 +35,7 @@ pub fn insert_std(words: &mut Words) {
 
 pub fn cast(run: &mut Runtime) -> anyhow::Result<()> {
     let type_id = run.stack.pop().ok_or(crate::RuntimeError::StackUnderflow())?;
-    let type_id = type_id.as_number().ok_or(crate::RuntimeError::UnexpectedValue { expected: "number".into(), found: type_id.value_type().as_str().into() })?;
+    let type_id = type_id.as_number().ok_or(crate::RuntimeError::UnexpectedValue { expected: "number".into(), found: type_id.value_type().as_str().into(), value: None })?;
 
     match type_id {
         1.0 => {
@@ -45,7 +45,7 @@ pub fn cast(run: &mut Runtime) -> anyhow::Result<()> {
             to_string(run)?;
         }
         _ => {
-            return Err(crate::RuntimeError::UnexpectedValue { expected: "number".to_string(), found: type_id.to_string() }.into());
+            return Err(crate::RuntimeError::UnexpectedValue { expected: "number".to_string(), found: type_id.to_string(), value: None }.into());
         }
     }
     Ok(())

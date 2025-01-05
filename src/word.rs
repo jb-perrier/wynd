@@ -2,6 +2,7 @@ use std::fmt::Display;
 
 use crate::{Value, ValueType, WordCode};
 
+#[derive(Debug)]
 pub enum WordForm {
     Postfix,
     Infix,
@@ -21,11 +22,13 @@ impl Display for WordForm {
     }
 }
 
+#[derive(Debug)]
 pub struct WordParam {
     pub(crate) typ: ValueType,
     pub(crate) description: String,
 }
 
+#[derive(Debug)]
 pub struct WordAbi {
     pub(crate) form: WordForm,
     pub(crate) input: Vec<WordParam>,
@@ -63,6 +66,7 @@ impl std::fmt::Display for WordAbi {
     }
 }
 
+#[derive(Debug)]
 pub struct Word {
     pub(crate) name: String,
     pub(crate) id: usize,
