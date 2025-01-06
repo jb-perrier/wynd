@@ -1,21 +1,20 @@
-// #[cfg(test)]
-// mod tests {
-//     extern crate test;
-//     use test::Bencher;
+#[cfg(test)]
+mod tests {
+    extern crate test;
+    use test::Bencher;
 
-//     use crate::{
-//         compile_to_bytecode, execute_bytecode, insert_std,
-//         tokenize,
-//     };
+    use crate::{
+        tail_call, tokenize
+    };
 
-//     use const_format::concatcp;
+    use const_format::concatcp;
 
-//     const SOURCE_COMPUTE_ONLY: &str =
-//         "1 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 1 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 *";
-//     const SOURCE: &str = concatcp!(": test ", SOURCE_COMPUTE_ONLY, " ;");
-//     const SOURCE_AND_CALL: &str = concatcp!(": test ", SOURCE_COMPUTE_ONLY, " ; test");
+    const SOURCE_COMPUTE_ONLY: &str =
+        "1 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 1 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 *";
+    const SOURCE: &str = concatcp!(": test ", SOURCE_COMPUTE_ONLY, " ;");
+    const SOURCE_AND_CALL: &str = concatcp!(": test ", SOURCE_COMPUTE_ONLY, " ; test");
 
-//     const SOURCE_EXP: &str = concatcp!(SOURCE_COMPUTE_ONLY, " exit");
+    const SOURCE_EXP: &str = concatcp!(SOURCE_COMPUTE_ONLY, " exit");
 
 //     #[bench]
 //     fn bench_bytecode_indirect_threaded(b: &mut Bencher) {
@@ -47,4 +46,10 @@
 //             .unwrap();
 //         });
 //     }
-// }
+
+    #[bench]
+    fn bench_tail_call(b: &mut Bencher) {
+        let toks = tokenize(SOURCE_EXP).unwrap();
+        b.iter(|| tail_call(&toks));
+    }
+}

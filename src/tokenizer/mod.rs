@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 
 #[cfg(test)]
 mod tests;
@@ -43,6 +45,23 @@ impl Token {
     }
 }
 
+impl Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Token::Word(word) => write!(f, "{}", word),
+            Token::Number(num) => write!(f, "{}", num),
+            Token::String(string) => write!(f, "\"{}\"", string),
+            Token::List(list) => {
+                let inner = list
+                    .iter()
+                    .map(|token| token.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" ");
+                write!(f, "[{}]", inner)
+            }
+        }
+    }
+}
 pub fn tokenize(source: &str) -> anyhow::Result<Vec<Token>> {
     let mut i = 0;
     let mut tokens = Vec::new();

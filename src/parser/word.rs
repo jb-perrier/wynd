@@ -1,6 +1,29 @@
 use std::fmt::Display;
 
-#[derive(Debug)]
+use super::ParsedToken;
+
+#[derive(Debug, Clone, Copy)]
+pub enum ValueType {
+    Number,
+    String,
+}
+
+impl ValueType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ValueType::Number => "Number",
+            ValueType::String => "String",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum WordImpl {
+    Native(usize),
+    Virtual(Vec<ParsedToken>),
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum WordForm {
     Postfix,
     Infix,
@@ -67,8 +90,7 @@ impl std::fmt::Display for WordAbi {
 #[derive(Debug)]
 pub struct Word {
     pub(crate) name: String,
-    pub(crate) id: usize,
-    pub(crate) code: WordCode,
+    pub(crate) implem: WordImpl,
     pub(crate) abi: WordAbi,
     pub(crate) description: Option<String>,
 }
@@ -84,16 +106,20 @@ impl WordBuilder {
         Self {
             word: Word {
                 name: name.into(),
-                id: 0,
-                code: WordCode::Tokens(Vec::new()),
+                implem: WordImpl::Virtual(Vec::new()),
                 description: None,
                 abi: WordAbi::new(),
             },
         }
     }
 
-    pub fn code(mut self, code: WordCode) -> Self {
-        self.word.code = code;
+    pub fn native(mut self, fn_addr: usize) -> Self {
+        self.word.implem = WordImpl::Native(fn_addr);
+        self
+    }
+
+    pub fn r#virtual(mut self, tokens: Vec<ParsedToken>) -> Self {
+        self.word.implem = WordImpl::Virtual(tokens);
         self
     }
 
