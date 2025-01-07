@@ -1,19 +1,19 @@
-// use crate::Token;
+use crate::Token;
 
-// mod word;
-// mod error;
-// mod token;
-// mod namespace;
+mod word;
+mod error;
+mod token;
+mod namespace;
 
-// pub use namespace::*;
-// pub use token::*;
-// pub use error::*;
-// pub use word::*;
+pub use namespace::*;
+pub use token::*;
+pub use error::*;
+pub use word::*;
 
-// pub struct ParsingUnit {
-//     words: Vec<Word>,
-//     inline_tokens: Vec<Token>,
-// }
+pub struct ParsingUnit {
+    words: Vec<Word>,
+    inline_tokens: Vec<Token>,
+}
 
 
 // pub fn parse(tokens: &[Token]) -> Result<ParsingUnit, ParsingError> {

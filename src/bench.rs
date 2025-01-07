@@ -4,7 +4,7 @@ mod tests {
     use test::Bencher;
 
     use crate::{
-        tail_call, tokenize
+        rust_compute, tokenize
     };
 
     use const_format::concatcp;
@@ -48,8 +48,10 @@ mod tests {
 //     }
 
     #[bench]
-    fn bench_tail_call(b: &mut Bencher) {
-        let toks = tokenize(SOURCE_EXP).unwrap();
-        b.iter(|| tail_call(&toks));
+    fn bench_rust(b: &mut Bencher) {
+        b.iter(|| {
+            test::black_box(rust_compute());
+        });
     }
 }
+

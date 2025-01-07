@@ -24,13 +24,9 @@
 //     print_stack: bool,
 // }
 
-use wynd::{tail_call, tokenize};
+use wynd::{add, tokenize, RuntimeImpl};
 
 pub fn main() {
-    const SOURCE: &str =
-        "1 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 1 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * 2 + 6 - 10 * 2 / 2 + 6 - 10 * 2 / 6 / 9 * exit";
-    let toks = tokenize(SOURCE).unwrap();
-    tail_call(&toks);
     // let cli = Cli::parse();
     // match cli.source.as_ref() {
     //     Some(source) => {
