@@ -24,8 +24,6 @@
 //     print_stack: bool,
 // }
 
-use wynd::{add, tokenize, RuntimeImpl};
-
 pub fn main() {
     // let cli = Cli::parse();
     // match cli.source.as_ref() {

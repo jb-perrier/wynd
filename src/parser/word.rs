@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use super::ParsedToken;
+use crate::RuntimeWordFn;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ValueType {
@@ -19,8 +19,18 @@ impl ValueType {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum WordImpl {
-    Native(usize),
-    Virtual(Vec<ParsedToken>),
+    Native(RuntimeWordFn),
+    Virtual(Vec<usize>),
+    Instruction(usize),
+}
+
+impl WordImpl {
+    pub fn as_virtual(&self) -> Option<&Vec<usize>> {
+        match self {
+            WordImpl::Virtual(v) => Some(v),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -113,13 +123,18 @@ impl WordBuilder {
         }
     }
 
-    pub fn native(mut self, fn_addr: usize) -> Self {
-        self.word.implem = WordImpl::Native(fn_addr);
+    pub fn instruction(mut self, id: usize) -> Self {
+        self.word.implem = WordImpl::Instruction(id);
         self
     }
 
-    pub fn r#virtual(mut self, tokens: Vec<ParsedToken>) -> Self {
-        self.word.implem = WordImpl::Virtual(tokens);
+    pub fn native(mut self, func: RuntimeWordFn) -> Self {
+        self.word.implem = WordImpl::Native(func);
+        self
+    }
+
+    pub fn virt(mut self, bytecode: Vec<usize>) -> Self {
+        self.word.implem = WordImpl::Virtual(bytecode);
         self
     }
 

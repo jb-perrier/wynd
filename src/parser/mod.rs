@@ -1,13 +1,11 @@
 use crate::Token;
 
 mod word;
-mod error;
-mod token;
+mod errors;
 mod namespace;
 
 pub use namespace::*;
-pub use token::*;
-pub use error::*;
+pub use errors::*;
 pub use word::*;
 
 pub struct ParsingUnit {

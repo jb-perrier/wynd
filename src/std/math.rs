@@ -1,9 +1,9 @@
-use crate::{Runtime, RuntimeError, Value, ValueType, WordBuilder, WordCode};
+use crate::{instructions, Runtime, RuntimeError, Value, ValueType, WordBuilder};
 
 pub fn insert_math(words: &mut crate::Words) {
     words.insert(
         WordBuilder::new("+")
-            .code(WordCode::Native(add))
+            .instruction(instructions::ADD)
             .input(ValueType::Number, "Left operand")
             .input(ValueType::Number, "Right operand")
             .output(ValueType::Number, "Result")
@@ -12,7 +12,7 @@ pub fn insert_math(words: &mut crate::Words) {
     );
     words.insert(
         WordBuilder::new("-")
-            .code(WordCode::Native(sub))
+            .instruction(instructions::SUB)
             .input(ValueType::Number, "Left operand")
             .input(ValueType::Number, "Right operand")
             .output(ValueType::Number, "Result")
@@ -21,7 +21,7 @@ pub fn insert_math(words: &mut crate::Words) {
     );
     words.insert(
         WordBuilder::new("*")
-            .code(WordCode::Native(mul))
+            .instruction(instructions::MUL)
             .input(ValueType::Number, "Left operand")
             .input(ValueType::Number, "Right operand")
             .output(ValueType::Number, "Result")
@@ -30,7 +30,7 @@ pub fn insert_math(words: &mut crate::Words) {
     );
     words.insert(
         WordBuilder::new("/")
-            .code(WordCode::Native(div))
+            .instruction(instructions::DIV)
             .input(ValueType::Number, "Left operand")
             .input(ValueType::Number, "Right operand")
             .output(ValueType::Number, "Result")
@@ -39,7 +39,7 @@ pub fn insert_math(words: &mut crate::Words) {
     );
     words.insert(
         WordBuilder::new("%")
-            .code(WordCode::Native(rem))
+            .instruction(instructions::MOD)
             .input(ValueType::Number, "Left operand")
             .input(ValueType::Number, "Right operand")
             .output(ValueType::Number, "Result")
@@ -48,47 +48,107 @@ pub fn insert_math(words: &mut crate::Words) {
     );
 }
 
-pub fn add(run: &mut Runtime) -> anyhow::Result<()> {
-    let a = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    let b = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    if let (Value::Number(a), Value::Number(b)) = (a, b) {
-        run.stack.push(Value::Number(a + b));
-    }
+#[inline]
+pub fn add(runtime: &mut Runtime) -> Result<(), RuntimeError> {
+    let a = runtime.peek_value(0);
+    let a = *a
+        .as_number()
+        .ok_or(RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
+
+    let b = runtime.peek_value(1);
+    let b = *b
+        .as_number()
+        .ok_or(RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
+
+    let result = a + b;
+
+    runtime.pop_value();
+    runtime.pop_value();
+    runtime.push_value(Value::Number(result));
+
     Ok(())
 }
 
-pub fn sub(run: &mut Runtime) -> anyhow::Result<()> {
-    let a = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    let b = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    if let (Value::Number(a), Value::Number(b)) = (a, b) {
-        run.stack.push(Value::Number(b - a));
-    }
+#[inline]
+pub fn sub(runtime: &mut Runtime) -> Result<(), RuntimeError> {
+    let a = runtime.peek_value(0);
+    let a = *a
+        .as_number()
+        .ok_or(RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
+
+    let b = runtime.peek_value(1);
+    let b = *b
+        .as_number()
+        .ok_or(RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
+
+    let result = b - a;
+
+    runtime.pop_value();
+    runtime.pop_value();
+    runtime.push_value(Value::Number(result));
+
     Ok(())
 }
 
-pub fn mul(run: &mut Runtime) -> anyhow::Result<()> {
-    let a = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    let b = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    if let (Value::Number(a), Value::Number(b)) = (a, b) {
-        run.stack.push(Value::Number(a * b));
-    }
+#[inline]
+pub fn mul(runtime: &mut Runtime) -> Result<(), RuntimeError> {
+    let a = runtime.peek_value(0);
+    let a = *a
+        .as_number()
+        .ok_or(RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
+
+    let b = runtime.peek_value(1);
+    let b = *b
+        .as_number()
+        .ok_or(RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
+
+    let result = a * b;
+
+    runtime.pop_value();
+    runtime.pop_value();
+    runtime.push_value(Value::Number(result));
+
     Ok(())
 }
 
-pub fn div(run: &mut Runtime) -> anyhow::Result<()> {
-    let a = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    let b = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    if let (Value::Number(a), Value::Number(b)) = (a, b) {
-        run.stack.push(Value::Number(b / a));
-    }
+#[inline]
+pub fn div(runtime: &mut Runtime) -> Result<(), RuntimeError> {
+    let a = runtime.peek_value(0);
+    let a = *a
+        .as_number()
+        .ok_or(RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
+
+    let b = runtime.peek_value(1);
+    let b = *b
+        .as_number()
+        .ok_or(RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
+
+    let result = b / a;
+
+    runtime.pop_value();
+    runtime.pop_value();
+    runtime.push_value(Value::Number(result));
+
     Ok(())
 }
 
-pub fn rem(run: &mut Runtime) -> anyhow::Result<()> {
-    let a = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    let b = run.stack.pop().ok_or(RuntimeError::StackUnderflow())?;
-    if let (Value::Number(a), Value::Number(b)) = (a, b) {
-        run.stack.push(Value::Number(b % a));
-    }
+#[inline]
+pub fn rem(runtime: &mut Runtime) -> Result<(), RuntimeError> {
+    let a = runtime.peek_value(0);
+    let a = *a
+        .as_number()
+        .ok_or(RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
+
+    let b = runtime.peek_value(1);
+    let b = *b
+        .as_number()
+        .ok_or(RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
+
+    let result = b % a;
+
+    runtime.pop_value();
+    runtime.pop_value();
+    runtime.push_value(Value::Number(result));
+
     Ok(())
 }
