@@ -20,14 +20,14 @@ impl ValueType {
 #[derive(Debug, Clone, PartialEq)]
 pub enum WordImpl {
     Native(RuntimeWordFn),
-    Virtual(Vec<usize>),
-    Instruction(usize),
+    Bytecode(Vec<usize>),
+    Builtin(usize),
 }
 
 impl WordImpl {
-    pub fn as_virtual(&self) -> Option<&Vec<usize>> {
+    pub fn as_bytecode(&self) -> Option<&Vec<usize>> {
         match self {
-            WordImpl::Virtual(v) => Some(v),
+            WordImpl::Bytecode(v) => Some(v),
             _ => None,
         }
     }
@@ -116,15 +116,15 @@ impl WordBuilder {
         Self {
             word: Word {
                 name: name.into(),
-                implem: WordImpl::Virtual(Vec::new()),
+                implem: WordImpl::Bytecode(Vec::new()),
                 description: None,
                 abi: WordAbi::new(),
             },
         }
     }
 
-    pub fn instruction(mut self, id: usize) -> Self {
-        self.word.implem = WordImpl::Instruction(id);
+    pub fn builtin(mut self, id: usize) -> Self {
+        self.word.implem = WordImpl::Builtin(id);
         self
     }
 
@@ -133,8 +133,8 @@ impl WordBuilder {
         self
     }
 
-    pub fn virt(mut self, bytecode: Vec<usize>) -> Self {
-        self.word.implem = WordImpl::Virtual(bytecode);
+    pub fn bytecode(mut self, bytecode: Vec<usize>) -> Self {
+        self.word.implem = WordImpl::Bytecode(bytecode);
         self
     }
 

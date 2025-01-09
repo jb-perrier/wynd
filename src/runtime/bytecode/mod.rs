@@ -1,103 +1,148 @@
 use crate::compiler::instructions::*;
 
-mod errors;
+use super::RuntimeError;
 
-pub use errors::*;
+pub fn execute_bytecode(
+    bytecode: &[usize],
+    stack: &mut [usize],
+    stack_pos: &mut usize,
+    frame_stack: &mut [usize],
+    frame_pos: &mut usize,
+) -> Result<(), RuntimeError> {
 
-use super::{Runtime, RuntimeError, Value};
+    let mut word_pos = 0;
+    while let Some(opcode) = bytecode.get(word_pos) {
+        match *opcode {
+            ADD => {
+                let a = f64::from_bits(
+                    *stack
+                        .get(*stack_pos - 1)
+                        .ok_or_else(|| RuntimeError::StackOverflow(*stack_pos - 1))?
+                        as u64
+                );
+                let b = f64::from_bits(
+                    *stack
+                        .get(*stack_pos - 2)
+                        .ok_or_else(|| RuntimeError::StackOverflow(*stack_pos - 2))?
+                        as u64
+                );
+                let res = a + b;
+                let slot = stack
+                    .get_mut(*stack_pos - 2)
+                    .ok_or_else(|| RuntimeError::StackOverflow(*stack_pos - 2))?;
+                *slot = res.to_bits() as usize;
+                *stack_pos -= 1;
 
-pub fn execute_bytecode(runtime: &mut Runtime) -> Result<(), RuntimeError> {
-    loop {
-        let word_addr = *runtime.frame().unwrap();
-        let opcode = *runtime.words().get(word_addr.word).unwrap().implem.as_virtual().unwrap().get(word_addr.instr).unwrap();
-
-        match opcode {
-            // add
-            ADD => crate::std::math::add(runtime)?,
+                word_pos += 1;
+            }
             // sub
-            SUB => crate::std::math::sub(runtime)?,
+            SUB => {
+                let a = f64::from_bits(
+                    *stack
+                        .get(*stack_pos - 1)
+                        .ok_or_else(|| RuntimeError::StackOverflow(*stack_pos - 1))?
+                        as u64,
+                );
+                let b = f64::from_bits(
+                    *stack
+                        .get(*stack_pos - 2)
+                        .ok_or_else(|| RuntimeError::StackOverflow(*stack_pos - 2))?
+                        as u64,
+                );
+                let res = b - a;
+                let slot = stack
+                    .get_mut(*stack_pos - 2)
+                    .ok_or_else(|| RuntimeError::StackOverflow(*stack_pos - 2))?;
+                *slot = res.to_bits() as usize;
+                *stack_pos -= 1;
+
+                word_pos += 1;
+            }
             // mul
-            MUL => crate::std::math::mul(runtime)?,
+            MUL => {
+                let a = f64::from_bits(
+                    *stack
+                        .get(*stack_pos - 1)
+                        .ok_or_else(|| RuntimeError::StackOverflow(*stack_pos - 1))?
+                        as u64,
+                );
+                let b = f64::from_bits(
+                    *stack
+                        .get(*stack_pos - 2)
+                        .ok_or_else(|| RuntimeError::StackOverflow(*stack_pos - 2))?
+                        as u64,
+                );
+                let res = a * b;
+                let slot = stack
+                    .get_mut(*stack_pos - 2)
+                    .ok_or(RuntimeError::StackOverflow(*stack_pos - 2))?;
+                *slot = res.to_bits() as usize;
+                *stack_pos -= 1;
+
+                word_pos += 1;
+            }
             // div
-            DIV => crate::std::math::div(runtime)?,
+            DIV => {
+                let a = f64::from_bits(
+                    *stack
+                        .get(*stack_pos - 1)
+                        .ok_or(RuntimeError::StackOverflow(*stack_pos - 1))?
+                        as u64,
+                );
+                let b = f64::from_bits(
+                    *stack
+                        .get(*stack_pos - 2)
+                        .ok_or(RuntimeError::StackOverflow(*stack_pos - 2))?
+                        as u64,
+                );
+                let res = b / a;
+                let slot = stack
+                    .get_mut(*stack_pos - 2)
+                    .ok_or(RuntimeError::StackOverflow(*stack_pos - 2))?;
+                *slot = res.to_bits() as usize;
+                *stack_pos -= 1;
+
+                word_pos += 1;
+            }
             // mod
-            MOD => crate::std::math::rem(runtime)?,
+            MOD => {
+                let a = f64::from_bits(
+                    *stack
+                        .get(*stack_pos - 1)
+                        .ok_or(RuntimeError::StackOverflow(*stack_pos - 1))?
+                        as u64,
+                );
+                let b = f64::from_bits(
+                    *stack
+                        .get(*stack_pos - 2)
+                        .ok_or(RuntimeError::StackOverflow(*stack_pos - 2))?
+                        as u64,
+                );
+                let res = b % a;
+                let slot = stack
+                    .get_mut(*stack_pos - 2)
+                    .ok_or(RuntimeError::StackOverflow(*stack_pos - 2))?;
+                *slot = res.to_bits() as usize;
+                *stack_pos -= 1;
+
+                word_pos += 1;
+            }
             // load
-            LOAD => {
-                let bytecode = runtime.words().get_instruction(&word_addr).unwrap();
-                runtime.push_value(Value::Number(f64::from_bits(bytecode as u64)));
+            LOAD_NUMBER => {
+                let bytecode = *bytecode
+                    .get(word_pos + 1)
+                    .ok_or(RuntimeError::OutOfBoundWordAccess(word_pos + 1))?;
+                let slot = stack
+                    .get_mut(*stack_pos)
+                    .ok_or(RuntimeError::StackOverflow(*stack_pos))?;
+                *slot = bytecode;
+                *stack_pos += 1;
 
-                runtime.frame_incr_instr(2);
-            }
-            // call
-            CALL => {
-                // let stack_previous_pos = *stack_pos - 1;
-                // let next_word_pos = *stack
-                //     .get(*stack_pos - 1)
-                //     .ok_or(RuntimeError::StackOverflow(stack_previous_pos))?;
-
-                // // moving current word pos to have the next pos when returning
-                // let word_pos = frame_stack
-                //     .get_mut(*frame_pos)
-                //     .ok_or(RuntimeError::FrameOverflow(*frame_pos))?;
-                // *word_pos += 1;
-
-                // // adding frame for the entering the called word
-                // *frame_pos += 1;
-                // let ret_slot = frame_stack
-                //     .get_mut(*frame_pos)
-                //     .ok_or(RuntimeError::FrameOverflow(*frame_pos))?;
-                // *ret_slot = next_word_pos;
-            }
-            // ret
-            RET => {
-                // *frame_pos -= 1;
+                word_pos += 2;
             }
             // exit
             EXIT => {
                 break;
-            }
-            // label
-            LBL => {
-                // lbl opcode + id
-                // let word_pos = frame_stack
-                //     .get_mut(*frame_pos)
-                //     .ok_or(RuntimeError::FrameOverflow(*frame_pos))?;
-                // *word_pos += 2;
-            }
-            // jmp_lbl
-            JMP_LBL => {
-                // let lbl_id = *stack
-                //     .get(*stack_pos - 1)
-                //     .ok_or(RuntimeError::StackOverflow(*stack_pos - 1))?;
-                // let word_pos = frame_stack
-                //     .get_mut(*frame_pos)
-                //     .ok_or(RuntimeError::FrameOverflow(*frame_pos))?;
-                // let mut pos = *word_pos;
-                // let mut found = false;
-                // while pos < words.len() {
-                //     let opcode = *words
-                //         .get(pos)
-                //         .ok_or(RuntimeError::OutOfBoundWordAccess(pos))?;
-                //     if opcode == LBL {
-                //         let id = *words
-                //             .get(pos + 1)
-                //             .ok_or(RuntimeError::OutOfBoundWordAccess(pos + 1))?;
-                //         if id == lbl_id {
-                //             found = true;
-                //             break;
-                //         }
-                //     }
-                //     pos += 2;
-                // }
-
-                // if found {
-                //     *word_pos = pos;
-                // } else {
-                //     return Err(RuntimeError::LabelNotFound(lbl_id));
-                // }
-
-                // *stack_pos -= 1;
             }
             _ => {
                 return Err(RuntimeError::InvalidOpcode);

@@ -4,10 +4,10 @@ use slab::Slab;
 
 use crate::Word;
 
-#[derive(Debug, Clone, Copy)]
-pub struct InstructionAddress {
+#[derive(Debug, Default, Clone, Copy)]
+pub struct Frame {
     pub word: usize,
-    pub instr: usize,
+    pub bytecode: usize,
 }
 
 pub struct Words {
@@ -16,14 +16,23 @@ pub struct Words {
 }
 
 impl Words {
-    pub fn get_instruction(&self, instr_addr: &InstructionAddress) -> Option<usize> {
-        self.words.get(instr_addr.word).and_then(|word| {
-            word.implem.as_virtual().map(|v| v[instr_addr.instr])
-        })
+    pub fn new() -> Self {
+        Self {
+            words: Slab::new(),
+            names: HashMap::new(),
+        }
     }
 
-    pub fn get_by_name(&self, name: &str) -> Option<&Word> {
-        self.names.get(name).map(|&id| &self.words[id])
+    pub fn get_bytecode(&self, bytecode_addr: &Frame) -> Option<usize> {
+        self.words
+            .get(bytecode_addr.word)
+            .and_then(|word| word.implem.as_bytecode().map(|v| v[bytecode_addr.bytecode]))
+    }
+
+    pub fn get_by_name(&self, name: &str) -> Option<(usize, &Word)> {
+        self.names
+            .get(name)
+            .and_then(|id| self.words.get(*id).map(|w| (*id, w)))
     }
 
     pub fn get(&self, id: usize) -> Option<&Word> {
@@ -33,9 +42,10 @@ impl Words {
         self.names.get(name).copied()
     }
 
-    pub fn insert(&mut self, word: Word) {
+    pub fn insert(&mut self, word: Word) -> usize {
         let name = word.name.clone();
         let id = self.words.insert(word);
         self.names.insert(name, id);
+        id
     }
 }

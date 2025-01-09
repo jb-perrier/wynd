@@ -1,9 +1,9 @@
-pub mod instructions;
 mod errors;
+pub mod instructions;
 
 pub use errors::*;
 
-use instructions::{ADD, CALL, DIV, EXIT, JMP_LBL, LBL, LOAD, MOD, MUL, RET, SUB};
+use instructions::{CALL_BYTECODE, CALL_NATIVE, LOAD_NUMBER};
 
 use crate::{Token, Words};
 
@@ -12,35 +12,32 @@ pub fn compile_to_bytecode(toks: &[Token], words: &mut Words) -> anyhow::Result<
 
     for tok in toks {
         match tok {
-            Token::Word(name) => match name.as_str() {
-                // builtin words
-                "+" => bytecode.push(ADD),
-                "-" => bytecode.push(SUB),
-                "*" => bytecode.push(MUL),
-                "/" => bytecode.push(DIV),
-                "%" => bytecode.push(MOD),
-                "ret" => bytecode.push(RET),
-                "exit" => bytecode.push(EXIT),
-                name => {
-                    if let Some(word) = words.get_index_by_name(name) {
-                        bytecode.push(CALL);
-                        bytecode.push(word);
-                    } else {
-                        return Err(CompilerError::UnknownWord(name.to_string()).into());
+            Token::Word(name) => {
+                if let Some((index, word)) = words.get_by_name(name) {
+                    match word.implem {
+                        crate::WordImpl::Native(func) => {
+                            bytecode.push(CALL_NATIVE);
+                            bytecode.push(func as usize);
+                        }
+                        crate::WordImpl::Bytecode(_) => {
+                            bytecode.push(CALL_BYTECODE);
+                            bytecode.push(index);
+                        }
+                        crate::WordImpl::Builtin(id) => {
+                            bytecode.push(id);
+                        }
                     }
+                } else {
+                    return Err(CompilerError::UnknownWord(name.to_string()).into());
                 }
-            },
+            }
             Token::Number(num) => {
-                bytecode.push(LOAD);
+                bytecode.push(LOAD_NUMBER);
                 bytecode.push(num.to_bits() as usize);
             }
-            _ => todo!(),
+            _ => unimplemented!(),
         }
     }
 
     Ok(bytecode)
 }
-
-
-
-

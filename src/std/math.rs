@@ -3,7 +3,7 @@ use crate::{instructions, Runtime, RuntimeError, Value, ValueType, WordBuilder};
 pub fn insert_math(words: &mut crate::Words) {
     words.insert(
         WordBuilder::new("+")
-            .instruction(instructions::ADD)
+            .builtin(instructions::ADD)
             .input(ValueType::Number, "Left operand")
             .input(ValueType::Number, "Right operand")
             .output(ValueType::Number, "Result")
@@ -12,7 +12,7 @@ pub fn insert_math(words: &mut crate::Words) {
     );
     words.insert(
         WordBuilder::new("-")
-            .instruction(instructions::SUB)
+            .builtin(instructions::SUB)
             .input(ValueType::Number, "Left operand")
             .input(ValueType::Number, "Right operand")
             .output(ValueType::Number, "Result")
@@ -21,7 +21,7 @@ pub fn insert_math(words: &mut crate::Words) {
     );
     words.insert(
         WordBuilder::new("*")
-            .instruction(instructions::MUL)
+            .builtin(instructions::MUL)
             .input(ValueType::Number, "Left operand")
             .input(ValueType::Number, "Right operand")
             .output(ValueType::Number, "Result")
@@ -30,7 +30,7 @@ pub fn insert_math(words: &mut crate::Words) {
     );
     words.insert(
         WordBuilder::new("/")
-            .instruction(instructions::DIV)
+            .builtin(instructions::DIV)
             .input(ValueType::Number, "Left operand")
             .input(ValueType::Number, "Right operand")
             .output(ValueType::Number, "Result")
@@ -39,7 +39,7 @@ pub fn insert_math(words: &mut crate::Words) {
     );
     words.insert(
         WordBuilder::new("%")
-            .instruction(instructions::MOD)
+            .builtin(instructions::MOD)
             .input(ValueType::Number, "Left operand")
             .input(ValueType::Number, "Right operand")
             .output(ValueType::Number, "Result")
@@ -50,22 +50,24 @@ pub fn insert_math(words: &mut crate::Words) {
 
 #[inline]
 pub fn add(runtime: &mut Runtime) -> Result<(), RuntimeError> {
-    let a = runtime.peek_value(0);
-    let a = *a
-        .as_number()
-        .ok_or(RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
-
-    let b = runtime.peek_value(1);
+    let b = runtime.peek_value(0);
     let b = *b
         .as_number()
-        .ok_or(RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
+        .ok_or_else(|| RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
 
+    let a = runtime.peek_value(1);
+    let a = *a
+        .as_number()
+        .ok_or_else(|| RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
+
+    // println!("ADD: {} + {}", a, b);
     let result = a + b;
 
     runtime.pop_value();
     runtime.pop_value();
     runtime.push_value(Value::Number(result));
 
+    runtime.frame_add(1);
     Ok(())
 }
 
@@ -74,19 +76,21 @@ pub fn sub(runtime: &mut Runtime) -> Result<(), RuntimeError> {
     let a = runtime.peek_value(0);
     let a = *a
         .as_number()
-        .ok_or(RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
+        .ok_or_else(|| RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
 
     let b = runtime.peek_value(1);
     let b = *b
         .as_number()
-        .ok_or(RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
+        .ok_or_else(|| RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
 
+    // println!("SUB: {} - {}", a, b);
     let result = b - a;
 
     runtime.pop_value();
     runtime.pop_value();
     runtime.push_value(Value::Number(result));
 
+    runtime.frame_add(1);
     Ok(())
 }
 
@@ -95,12 +99,12 @@ pub fn mul(runtime: &mut Runtime) -> Result<(), RuntimeError> {
     let a = runtime.peek_value(0);
     let a = *a
         .as_number()
-        .ok_or(RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
+        .ok_or_else(|| RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
 
     let b = runtime.peek_value(1);
     let b = *b
         .as_number()
-        .ok_or(RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
+        .ok_or_else(|| RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
 
     let result = a * b;
 
@@ -108,6 +112,7 @@ pub fn mul(runtime: &mut Runtime) -> Result<(), RuntimeError> {
     runtime.pop_value();
     runtime.push_value(Value::Number(result));
 
+    runtime.frame_add(1);
     Ok(())
 }
 
@@ -116,12 +121,12 @@ pub fn div(runtime: &mut Runtime) -> Result<(), RuntimeError> {
     let a = runtime.peek_value(0);
     let a = *a
         .as_number()
-        .ok_or(RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
+        .ok_or_else(|| RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
 
     let b = runtime.peek_value(1);
     let b = *b
         .as_number()
-        .ok_or(RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
+        .ok_or_else(|| RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
 
     let result = b / a;
 
@@ -129,6 +134,7 @@ pub fn div(runtime: &mut Runtime) -> Result<(), RuntimeError> {
     runtime.pop_value();
     runtime.push_value(Value::Number(result));
 
+    runtime.frame_add(1);
     Ok(())
 }
 
@@ -137,12 +143,12 @@ pub fn rem(runtime: &mut Runtime) -> Result<(), RuntimeError> {
     let a = runtime.peek_value(0);
     let a = *a
         .as_number()
-        .ok_or(RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
+        .ok_or_else(|| RuntimeError::UnexpectedValueType(a.type_name().to_owned()))?;
 
     let b = runtime.peek_value(1);
     let b = *b
         .as_number()
-        .ok_or(RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
+        .ok_or_else(|| RuntimeError::UnexpectedValueType(b.type_name().to_owned()))?;
 
     let result = b % a;
 
@@ -150,5 +156,6 @@ pub fn rem(runtime: &mut Runtime) -> Result<(), RuntimeError> {
     runtime.pop_value();
     runtime.push_value(Value::Number(result));
 
+    runtime.frame_add(1);
     Ok(())
 }
