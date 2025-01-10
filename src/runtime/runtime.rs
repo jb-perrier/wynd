@@ -7,11 +7,9 @@ pub struct Runtime<'a> {
 
     frames: &'a mut [Frame],
     // always points to the current frame
-    current_frame: usize,
+    next_frame: usize,
 
     words: &'a mut Words,
-
-    bytecode: &'a [usize],
 }
 
 impl<'a> Runtime<'a> {
@@ -19,25 +17,19 @@ impl<'a> Runtime<'a> {
         values: &'a mut [Value],
         frames: &'a mut [Frame],
         words: &'a mut Words,
-        bytecode: &'a [usize],
     ) -> Runtime<'a> {
         Runtime {
             values,
             next_value: 0,
             frames,
-            current_frame: 0,
+            next_frame: 0,
             words,
-            bytecode,
         }
-    }
-
-    pub fn bytecode(&self) -> &[usize] {
-        self.bytecode
     }
     
     pub fn clear(&mut self) {
         self.next_value = 0;
-        self.current_frame = 0;
+        self.next_frame = 0;
         self.frames[0] = Frame::default();
     }
 
@@ -73,24 +65,29 @@ impl<'a> Runtime<'a> {
 
     #[inline(always)]
     pub fn push_frame(&mut self, instr_addr: Frame) {
-        self.frames[self.current_frame] = instr_addr;
-        self.current_frame += 1;
+        self.frames[self.next_frame] = instr_addr;
+        self.next_frame += 1;
     }
 
     #[inline(always)]
     pub fn pop_frame(&mut self) {
-        self.current_frame -= 1;
+        self.next_frame -= 1;
     }
 
     #[inline(always)]
-    pub fn frame(&mut self) -> Option<&Frame> {
-        self.frames.get(self.current_frame)
+    pub fn frame(&self) -> Option<&Frame> {
+        self.frames.get(self.next_frame - 1)
+    }
+
+    #[inline(always)]
+    pub fn frame_mut(&mut self) -> Option<&mut Frame> {
+        self.frames.get_mut(self.next_frame - 1)
     }
 
     #[inline(always)]
     pub fn frame_add(&mut self, incr: usize) -> Option<&Frame> {
-        self.frames.get_mut(self.current_frame)?.bytecode += incr;
-        self.frames.get(self.current_frame)
+        self.frame_mut()?.bytecode += incr;
+        self.frame()
     }
 
     #[inline(always)]

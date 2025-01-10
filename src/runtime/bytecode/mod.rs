@@ -1,15 +1,37 @@
 use crate::compiler::instructions::*;
 
-use super::RuntimeError;
+use super::{Runtime, RuntimeError, Value};
 
-pub fn execute_bytecode(
+pub fn execute_bytecode(runtime: &mut Runtime) -> Result<(), RuntimeError> {
+    loop {
+        let frame = *runtime.frame().unwrap();
+        let opcode = *runtime.words().get(frame.word).unwrap().implem.as_bytecode().unwrap().get(frame.bytecode).unwrap();
+        match opcode {
+            ADD => crate::std::math::add(runtime)?,
+            SUB => crate::std::math::sub(runtime)?,
+            MUL => crate::std::math::mul(runtime)?,
+            DIV => crate::std::math::div(runtime)?,
+            MOD => crate::std::math::rem(runtime)?,
+            LOAD_NUMBER => {
+                let bytecode = *runtime.words().get(frame.word).unwrap().implem.as_bytecode().unwrap().get(frame.bytecode + 1).unwrap();
+                let num = f64::from_bits(bytecode as u64);
+                runtime.push_value(Value::Number(num));
+                runtime.frame_add(2);
+            }
+            EXIT => break,
+            _ => return Err(RuntimeError::InvalidOpcode),
+        }
+    }
+    Ok(())
+}
+
+pub fn execute_bytecode_targetspeed(
     bytecode: &[usize],
     stack: &mut [usize],
     stack_pos: &mut usize,
     frame_stack: &mut [usize],
     frame_pos: &mut usize,
 ) -> Result<(), RuntimeError> {
-
     let mut word_pos = 0;
     while let Some(opcode) = bytecode.get(word_pos) {
         match *opcode {
@@ -18,13 +40,13 @@ pub fn execute_bytecode(
                     *stack
                         .get(*stack_pos - 1)
                         .ok_or_else(|| RuntimeError::StackOverflow(*stack_pos - 1))?
-                        as u64
+                        as u64,
                 );
                 let b = f64::from_bits(
                     *stack
                         .get(*stack_pos - 2)
                         .ok_or_else(|| RuntimeError::StackOverflow(*stack_pos - 2))?
-                        as u64
+                        as u64,
                 );
                 let res = a + b;
                 let slot = stack
