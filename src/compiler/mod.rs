@@ -1,13 +1,19 @@
 mod errors;
+mod image;
 pub mod instructions;
 
 pub use errors::*;
+pub use image::*;
 
 use instructions::{CALL_BYTECODE, CALL_NATIVE, LOAD_NUMBER};
 
-use crate::{Token, Words};
+use crate::{Module, Token};
 
-pub fn compile_to_bytecode(toks: &[Token], words: &mut Words) -> anyhow::Result<Vec<usize>> {
+pub fn compile_to_image(
+    toks: &[Token],
+    modules: &[Module],
+    image: &mut Image,
+) -> anyhow::Result<()> {
     let mut bytecode = Vec::new();
 
     for tok in toks {
@@ -15,15 +21,15 @@ pub fn compile_to_bytecode(toks: &[Token], words: &mut Words) -> anyhow::Result<
             Token::Word(name) => {
                 if let Some((index, word)) = words.get_by_name(name) {
                     match word.implem {
-                        crate::WordImpl::Native(func) => {
+                        crate::Type::Native(func) => {
                             bytecode.push(CALL_NATIVE);
                             bytecode.push(func as usize);
                         }
-                        crate::WordImpl::Bytecode(_) => {
+                        crate::Type::Bytecode(_) => {
                             bytecode.push(CALL_BYTECODE);
                             bytecode.push(index);
                         }
-                        crate::WordImpl::Builtin(id) => {
+                        crate::Type::Builtin(id) => {
                             bytecode.push(id);
                         }
                     }
@@ -39,5 +45,5 @@ pub fn compile_to_bytecode(toks: &[Token], words: &mut Words) -> anyhow::Result<
         }
     }
 
-    Ok(bytecode)
+    Ok(())
 }

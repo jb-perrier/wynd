@@ -4,7 +4,8 @@ mod tests {
     use test::Bencher;
 
     use crate::{
-        compile_to_bytecode, execute_bytecode, execute_bytecode_targetspeed, rust_compute, std::insert_std, tokenize, Frame, Runtime, Value, WordBuilder, Words
+        compile_to_image, execute_bytecode, execute_bytecode_targetspeed, rust_compute,
+        std::insert_std, tokenize, Frame, InterpretedWordParameters, Value, WordBuilder, Words,
     };
 
     use const_format::concatcp;
@@ -16,53 +17,39 @@ mod tests {
 
     const SOURCE_WITH_EXIT: &str = concatcp!(SOURCE_COMPUTE_ONLY, " exit");
 
-    #[bench]
-    fn bench_bytecode_arithmetic_target(b: &mut Bencher) {
-        let toks = tokenize(SOURCE_WITH_EXIT).unwrap();
-        let mut words = Words::new();
-        insert_std(&mut words);
+    // #[bench]
+    // fn bench_bytecode_arithmetic_target(b: &mut Bencher) {
+    //     let toks = tokenize(SOURCE_WITH_EXIT).unwrap();
+    //     let mut words = Words::new();
+    //     insert_std(&mut words);
 
-        let bytecode = compile_to_bytecode(&toks, &mut words).unwrap();
+    //     let bytecode = compile_to_image(&toks, &mut words).unwrap();
 
-        let mut values = vec![0; 128];
-        let mut frames = vec![0; 128];
+    //     let mut values = vec![0; 128];
+    //     let mut frames = vec![0; 128];
 
-        b.iter(|| {
-            let mut stack_pos = 0;
-            let mut frame_pos = 0;
-            frames[0] = 0;
-            execute_bytecode_targetspeed(
-                &bytecode,
-                &mut values,
-                &mut stack_pos,
-                &mut frames,
-                &mut frame_pos,
-            )
-            .unwrap();
-        });
-    }
+    //     b.iter(|| {
+    //         let mut stack_pos = 0;
+    //         let mut frame_pos = 0;
+    //         frames[0] = 0;
+    //         execute_bytecode_targetspeed(
+    //             &bytecode,
+    //             &mut values,
+    //             &mut stack_pos,
+    //             &mut frames,
+    //             &mut frame_pos,
+    //         )
+    //         .unwrap();
+    //     });
+    // }
 
     #[bench]
     fn bench_bytecode_arithmetic_current(b: &mut Bencher) {
         let toks = tokenize(SOURCE_WITH_EXIT).unwrap();
-        let mut words = Words::new();
-        insert_std(&mut words);
 
-        let bytecode = compile_to_bytecode(&toks, &mut words).unwrap();
-        let main_word = WordBuilder::new("main").bytecode(bytecode).build();
-        let main_id = words.insert(main_word);
 
-        let mut values = vec![Value::Number(0.0); 128];
-        let mut frames = vec![Frame::default(); 128];
-        
-        let mut runtime = Runtime::new(&mut values, &mut frames, &mut words);
         b.iter(|| {
-            runtime.clear();
-            runtime.push_frame(Frame {
-                word: main_id,
-                bytecode: 0,
-            });
-            execute_bytecode(&mut runtime).unwrap();
+
         });
     }
 
@@ -72,7 +59,7 @@ mod tests {
         let mut words = Words::new();
         insert_std(&mut words);
 
-        let bytecode = compile_to_bytecode(&toks, &mut words).unwrap();
+        let bytecode = compile_to_image(&toks, &mut words).unwrap();
         let main_word = WordBuilder::new("main").bytecode(bytecode).build();
         let main_id = words.insert(main_word);
 
@@ -82,10 +69,10 @@ mod tests {
             word: main_id,
             bytecode: 0,
         };
-        let mut runtime = Runtime::new(&mut values, &mut frames, &mut words);
+        let mut runtime = InterpretedWordParameters::new(&mut values, &mut frames, &mut words);
         execute_bytecode(&mut runtime).unwrap();
         let result = runtime.values()[0].clone();
-        assert_eq!(result, Value::Number(-5523.75));
+        assert_eq!(*result.as_number().unwrap(), -5523.75);
     }
 
     //     #[bench]

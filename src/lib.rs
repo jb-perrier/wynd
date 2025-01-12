@@ -11,7 +11,9 @@ mod tokenizer;
 mod bench;
 mod compiler;
 pub mod std;
+mod utils;
 
+pub use utils::*;
 pub use parser::*;
 pub use runtime::*;
 pub use tokenizer::*;

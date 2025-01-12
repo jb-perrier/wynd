@@ -1,12 +1,18 @@
 pub mod math;
+pub mod word;
 
-use crate::{instructions::EXIT, WordBuilder, Words};
+use crate::{instructions::EXIT, Module, Word, WordBuilder};
 
-pub fn insert_std(words: &mut Words) {
-    math::insert_math(words);
+pub fn modules() -> Vec<Module> {
+    let mut root = Module::new("std");
+    root.words_mut().extend(words());
+    
+    vec![
+        root,
+        math::module(),
+    ]
+}
 
-    let exit_word = WordBuilder::new("exit")
-        .builtin(EXIT)
-        .build();
-    words.insert(exit_word);
+pub fn words() -> Vec<Word> {
+    vec![WordBuilder::new("exit").builtin(EXIT).build()]
 }

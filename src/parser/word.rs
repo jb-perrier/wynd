@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::RuntimeWordFn;
+use crate::{CompiledWordParameters, InterpretedWordParameters, RuntimeWordFn, Token};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ValueType {
@@ -18,40 +18,16 @@ impl ValueType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum WordImpl {
-    Native(RuntimeWordFn),
-    Bytecode(Vec<usize>),
-    Builtin(usize),
+pub enum WordImplementation {
+    Tokens(Vec<Token>),
+    Native {
+        interpreted: Option<InterpretedWordFn>,
+        compiled: Option<CompiledWordFn>,
+    },
 }
 
-impl WordImpl {
-    pub fn as_bytecode(&self) -> Option<&Vec<usize>> {
-        match self {
-            WordImpl::Bytecode(v) => Some(v),
-            _ => None,
-        }
-    }
-}
+impl WordImplementation {}
 
-#[derive(Debug, Clone, Copy)]
-pub enum WordForm {
-    Postfix,
-    Infix,
-    Prefix,
-    Special,
-}
-
-impl Display for WordForm {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            WordForm::Postfix => "Postfix",
-            WordForm::Infix => "Infix",
-            WordForm::Prefix => "Prefix",
-            WordForm::Special => "Special",
-        };
-        write!(f, "{}", s)
-    }
-}
 
 #[derive(Debug)]
 pub struct WordParam {
@@ -61,7 +37,6 @@ pub struct WordParam {
 
 #[derive(Debug)]
 pub struct WordAbi {
-    pub(crate) form: WordForm,
     pub(crate) input: Vec<WordParam>,
     pub(crate) output: Vec<WordParam>,
 }
@@ -69,7 +44,6 @@ pub struct WordAbi {
 impl WordAbi {
     pub fn new() -> Self {
         Self {
-            form: WordForm::Postfix,
             input: Vec::new(),
             output: Vec::new(),
         }
@@ -97,15 +71,34 @@ impl std::fmt::Display for WordAbi {
     }
 }
 
+pub type InterpretedWordFn = fn(&mut InterpretedWordParameters) -> Result<(), crate::RuntimeError>;
+pub type CompiledWordFn = fn(&mut CompiledWordParameters) -> Result<(), crate::RuntimeError>;
+
 #[derive(Debug)]
 pub struct Word {
-    pub(crate) name: String,
-    pub(crate) implem: WordImpl,
-    pub(crate) abi: WordAbi,
-    pub(crate) description: Option<String>,
+    name: String,
+    abi: WordAbi,
+    description: String,
+    implementation: WordImplementation,
 }
 
-impl Word {}
+impl Word {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+
+    pub fn abi(&self) -> &WordAbi {
+        &self.abi
+    }
+
+    pub fn implementation(&self) -> &WordImplementation {
+        &self.implementation
+    }
+}
 
 pub struct WordBuilder {
     word: Word,
@@ -116,35 +109,47 @@ impl WordBuilder {
         Self {
             word: Word {
                 name: name.into(),
-                implem: WordImpl::Bytecode(Vec::new()),
-                description: None,
+                description: "".to_string(),
                 abi: WordAbi::new(),
+                implementation: WordImplementation::Native {
+                    interpreted: None,
+                    compiled: None,
+                },
             },
         }
     }
 
-    pub fn builtin(mut self, id: usize) -> Self {
-        self.word.implem = WordImpl::Builtin(id);
+    pub fn tokens(mut self, tokens: Vec<Token>) -> Self {
+        self.word.implementation = WordImplementation::Tokens(tokens);
         self
     }
 
-    pub fn native(mut self, func: RuntimeWordFn) -> Self {
-        self.word.implem = WordImpl::Native(func);
+    pub fn native_interpreted(mut self, func: InterpretedWordFn) -> Self {
+        if let WordImplementation::Native { ref mut interpreted, .. } = self.word.implementation {
+            *interpreted = Some(func);
+        } else {
+            self.word.implementation = WordImplementation::Native {
+            interpreted: Some(func),
+            compiled: None,
+            };
+        }
         self
     }
-
-    pub fn bytecode(mut self, bytecode: Vec<usize>) -> Self {
-        self.word.implem = WordImpl::Bytecode(bytecode);
+    
+    pub fn native_compiled(mut self, func: CompiledWordFn) -> Self {
+        if let WordImplementation::Native { ref mut compiled, .. } = self.word.implementation {
+            *compiled = Some(func);
+        } else {
+            self.word.implementation = WordImplementation::Native {
+            interpreted: None,
+            compiled: Some(func),
+            };
+        }
         self
     }
 
     pub fn description(mut self, description: impl Into<String>) -> Self {
-        self.word.description = Some(description.into());
-        self
-    }
-
-    pub fn form(mut self, form: WordForm) -> Self {
-        self.word.abi.form = form;
+        self.word.description = description.into();
         self
     }
 

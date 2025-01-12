@@ -1,7 +1,12 @@
-#[derive(Debug, Clone, PartialEq)]
+use std::sync::Arc;
+
+#[derive(Debug, Clone, Default)]
 pub enum Value {
+    #[default]
+    Empty,
     Number(f64),
     String(String),
+    Any(Arc<dyn std::any::Any + Send + Sync>),
 }
 
 impl Value {
@@ -23,6 +28,8 @@ impl Value {
         match self {
             Value::Number(_) => "number",
             Value::String(_) => "string",
+            Value::Empty => "empty",
+            Value::Any(_) => "any",
         }
     }
 }

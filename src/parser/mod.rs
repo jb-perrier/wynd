@@ -2,17 +2,11 @@ use crate::Token;
 
 mod word;
 mod errors;
-mod namespace;
+mod module;
 
-pub use namespace::*;
+pub use module::*;
 pub use errors::*;
 pub use word::*;
-
-pub struct ParsingUnit {
-    words: Vec<Word>,
-    inline_tokens: Vec<Token>,
-}
-
 
 // pub fn parse(tokens: &[Token]) -> Result<ParsingUnit, ParsingError> {
 //     let mut inline_tokens = Vec::new();
